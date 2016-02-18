@@ -26,7 +26,7 @@ import warnings
 
 import boto
 
-from boto.compat import expanduser, ConfigParser, StringIO
+from boto.compat import expanduser, ConfigParser, NoOptionError, NoSectionError, StringIO
 
 
 # By default we use two locations for the boto configurations,
@@ -127,21 +127,21 @@ class Config(object):
     def get_instance(self, name, default=None):
         try:
             val = self.get('Instance', name)
-        except:
+        except (NoOptionError, NoSectionError):
             val = default
         return val
 
     def get_user(self, name, default=None):
         try:
             val = self.get('User', name)
-        except:
+        except (NoOptionError, NoSectionError):
             val = default
         return val
 
     def getint_user(self, name, default=0):
         try:
             val = self.getint('User', name)
-        except:
+        except (NoOptionError, NoSectionError):
             val = default
         return val
 
@@ -151,21 +151,21 @@ class Config(object):
     def get(self, section, name, default=None):
         try:
             val = self.__dict__['_impl'].get(section, name)
-        except:
+        except (NoOptionError, NoSectionError):
             val = default
         return val
 
     def getint(self, section, name, default=0):
         try:
             val = self.__dict__['_impl'].getint(section, name)
-        except:
+        except (NoOptionError, NoSectionError):
             val = int(default)
         return val
 
     def getfloat(self, section, name, default=0.0):
         try:
             val = self.__dict__['_impl'].getfloat(section, name)
-        except:
+        except (NoOptionError, NoSectionError):
             val = float(default)
         return val
 
