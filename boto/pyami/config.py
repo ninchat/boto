@@ -49,12 +49,10 @@ elif 'BOTO_PATH' in os.environ:
         BotoConfigLocations.append(expanduser(path))
 
 
-class Config(ConfigParser):
+class Config(object):
 
     def __init__(self, path=None, fp=None, do_load=True):
-        # We don't use ``super`` here, because ``ConfigParser`` still uses
-        # old-style classes.
-        ConfigParser.__init__(self, {'working_dir': '/mnt/pyami',
+        self._impl = ConfigParser({'working_dir': '/mnt/pyami',
                                          'debug': '0'})
         if do_load:
             if path:
@@ -69,6 +67,19 @@ class Config(ConfigParser):
                     self.load_credential_file(full_path)
                 except IOError:
                     warnings.warn('Unable to load AWS_CREDENTIAL_FILE (%s)' % full_path)
+
+    def __getattr__(self, name):
+        # Workaround for pickle.
+        try:
+            impl = self.__dict__['_impl']
+        except KeyError:
+            raise AttributeError(name)
+
+        return getattr(impl, name)
+
+    # Workaround for mock.
+    def has_option(self, *args, **kwargs):
+        return self.__dict__['_impl'].has_option(*args, **kwargs)
 
     def load_credential_file(self, path):
         """Load a credential file as is setup like the Java utilities"""
@@ -139,21 +150,21 @@ class Config(ConfigParser):
 
     def get(self, section, name, default=None):
         try:
-            val = ConfigParser.get(self, section, name)
+            val = self.__dict__['_impl'].get(section, name)
         except:
             val = default
         return val
 
     def getint(self, section, name, default=0):
         try:
-            val = ConfigParser.getint(self, section, name)
+            val = self.__dict__['_impl'].getint(section, name)
         except:
             val = int(default)
         return val
 
     def getfloat(self, section, name, default=0.0):
         try:
-            val = ConfigParser.getfloat(self, section, name)
+            val = self.__dict__['_impl'].getfloat(section, name)
         except:
             val = float(default)
         return val
